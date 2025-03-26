@@ -1,14 +1,19 @@
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 
 public class App {
     public static void main(String[] args) throws Exception {
-        System.out.println("Hello, World!");
-
         Connection conexion  = getConnction();
+
+        // buscarClientes(conexion);
+        // getProductosParaReponer(conexion, 20);
+        getProductosGama(conexion, "Aromáticas");
+
         cerrarConexion(conexion);
 
     }
@@ -21,7 +26,7 @@ public class App {
         String database = "vivero"; // nombre de la base de datos recien creada, en este caso vivero.
         // Esto especifica una zona horaria, no es obligatorio de utilizar, pero en
         // algunas zonas genera conflictos de conexión si no existiera
-        String zona = "?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
+        String zona = "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
         String url = "jdbc:mysql://" + host + ":" + port + "/" + database + zona;
         // esto indica la ruta de conexion, que es la combinacion de
         // host,usuario,puerto, nombre de la base de datos a la cual queremos
@@ -55,4 +60,76 @@ public class App {
             }
         }    
     }
+
+
+
+    public static void buscarClientes(Connection conexion) {
+        String sql = "SELECT nombre_contacto, apellido_contacto, telefono FROM cliente";
+        try {
+            Statement stmt = conexion.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            int count = 0;
+            while (rs.next()) {
+                    String nombre = rs.getString("nombre_contacto");
+                    String apellido = rs.getString("apellido_contacto");
+                    String telefono = rs.getString("telefono");
+                    count++;
+                    System.out.println(count + " - " + nombre + " " + apellido + " -  "+ telefono);
+            }
+            // Cerrar ResultSet y Statement dentro del bloque try-catch-finally
+            rs.close();
+            stmt.close();
+        } catch (SQLException e) {
+            System.out.println("Error en la consulta: " + e.getMessage());
+        }
+    }
+
+
+
+    public static void getProductosParaReponer(Connection conexion, int puntoReposicion) {
+        String sql = "SELECT nombre, cantidad_en_stock FROM producto WHERE cantidad_en_stock < " + puntoReposicion;
+        try {
+            Statement stmt = conexion.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            int count = 0;
+            while (rs.next()) {
+                    String nombre = rs.getString("nombre");
+                    int stock = rs.getInt("cantidad_en_stock");
+                    count++;
+                    System.out.println(count + " - " + nombre + " -  "+ stock);
+            }
+            // Cerrar ResultSet y Statement dentro del bloque try-catch-finally
+            rs.close();
+            stmt.close();
+        } catch (SQLException e) {
+            System.out.println("Error en la consulta: " + e.getMessage());
+        }
+    }
+
+
+
+    public static void getProductosGama(Connection conexion, String nombreGama) {
+        String sql = "Select p.nombre, p.codigo_producto, ga.gama, ga.id_gama from producto as p Join gama_producto as ga On p.id_gama = ga.id_gama Where ga.gama = '" + nombreGama + "'";
+        try {
+            Statement stmt = conexion.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            int count = 0;
+            while (rs.next()) {
+                    String nombre = rs.getString("nombre");
+                    String codigoProducto = rs.getString("codigo_producto");
+                    String gama = rs.getString("gama");
+                    int codigoGama = rs.getInt("id_gama");
+
+                    count++;
+                    System.out.println(count + " - " + nombre + " -  "+ codigoProducto + " - " + gama + " - " + codigoGama);
+            }
+            // Cerrar ResultSet y Statement dentro del bloque try-catch-finally
+            rs.close();
+            stmt.close();
+        } catch (SQLException e) {
+            System.out.println("Error en la consulta: " + e.getMessage());
+        }
+    }
+
 }
+
